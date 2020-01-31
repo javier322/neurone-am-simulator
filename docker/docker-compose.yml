@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+
+  mongo:
+    image: mongo
+    restart: always
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE:  test
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - 27018:27017
+    volumes:
+      - ./createdbuser.js:/docker-entrypoint-initdb.d/createdbuser.js:ro 
+volumes:
+  mongodb:
