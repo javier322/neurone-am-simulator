@@ -6,7 +6,8 @@ var BookmarkSchema = new mongoose.Schema({
     action: String,
     docId: String,
     url: String,
-    relevant: Boolean
+    relevant: Boolean,
+    userMade: Boolean
   });
   
   module.exports = mongoose.model('Bookmark',BookmarkSchema,'bookmarks');

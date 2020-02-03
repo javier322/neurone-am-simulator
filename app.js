@@ -22,7 +22,7 @@ const states = {
     'B': ['S', 'U'], 'U': ['S', 'B']
 }
 
-const participants = [...Array(3).keys()].map(e => {
+const participants = [...Array(45).keys()].map(e => {
     return {
         username: "participant" + e,
         state: "I",
@@ -76,6 +76,8 @@ Queries.remove({}, () => {
     //Queries.create({ username: "kimbo", localTimestamp: Date.now() })
 })
 UserData.remove({}, () => {
+
+    UserData.insertMany(participants)
     //UserData.create({ username: "kimbo", localTimestamp: Date.now() })
 })
 
@@ -110,7 +112,7 @@ const chooseNewState = (p) => {
 
     }
     console.log("newstate", newState)
-    p.prevState = p.state
+    p.prevState = p.state==='N'? p.prevState: p.state
     p.state = newState
     if (p.state !== 'N') {
         console.log(states[newState])
@@ -140,7 +142,7 @@ const makeAction = (p) => {
 
                 let documentExit = {
                     username: p.username,
-                    url: `/page/${p.docId}`,
+                    url: `/page/${p.doc.id}`,
                     state: 'PageExit',
                     localTimestamp: Date.now()
                 }
@@ -186,7 +188,8 @@ const makeAction = (p) => {
                 localTimestamp: Date.now(),
                 action: 'Bookmark',
                 url: `/page/${p.doc.id}`,
-                relevant: p.doc.relevant
+                relevant: p.doc.relevant,
+                userMade: true
             }
             Bookrmark.create(bookmark)
             break;
@@ -196,7 +199,8 @@ const makeAction = (p) => {
                 localTimestamp: Date.now(),
                 action: 'Unbookmark',
                 url: `/page/${p.doc.id}`,
-                relevant: p.doc.relevant
+                relevant: p.doc.relevant,
+                userMade: true
             }
             Bookrmark.create(bookmarkObj)
             break;
@@ -207,26 +211,27 @@ const makeAction = (p) => {
 
 const simulateNeurone = () => {
 
-    participants.map(participant => {
-        console.log(participant)
-        chooseNewState(participant)
-        makeAction(participant)
-    })
+
+            participants.map(participant => {
+                console.log(participant)
+                chooseNewState(participant)
+                makeAction(participant)
+            })
 }
 
 app.get('/init', (req, res, next) => {
 
     if (sesion == null) {
-        sesion = setInterval(() => simulateNeurone(), 1000)
+        sesion = setInterval(() => simulateNeurone(), 500)
     }
-    res.status(200)
+    res.status(200).json("ok")
 })
 
 app.get('/stop', (req, res, next) => {
 
     clearInterval(sesion)
     sesion = null
-    res.status(200)
+    res.status(200).json("ok")
 })
 
 app.listen(port, () => {
