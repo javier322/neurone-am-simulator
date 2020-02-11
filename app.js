@@ -15,7 +15,7 @@ const documents = [{ id: "d1", relevant: true }, { id: "d2", relevant: false }, 
 { id: "d10", relevant: false }, { id: "d11", relevant: false }, { id: "d12", relevant: true }]
 
 
-const queries = [...Array(20).keys()].map(e => "q" + e)
+const queries = [...Array(40).keys()].map(e => "q" + e)
 
 const states = {
     'S': ['Q'], 'Q': ['D', 'Q'], 'D': ['S', 'B'],
@@ -35,22 +35,22 @@ const participants = [...Array(45).keys()].map(e => {
 })
 let sesion = null
 
-console.log(documents)
-console.log(queries)
-console.log(states)
-console.log(participants)
+// console.log(documents)
+// console.log(queries)
+// console.log(states)
+// console.log(participants)
 
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const host = process.env.MONGO_DB || 'localhost'
-mongoose.connect(`mongodb://test:test@${host}:27018/test`)
+mongoose.connect(`mongodb://test:test@${host}:27017/test`)
     .then(() => { // if all is ok we will be here
-        console.log('Start');
+        // console.log('Start');
     })
     .catch(err => { // if error we will be here
-        console.error('App starting error:', err.stack);
+        // console.error('App starting error:', err.stack);
         process.exit(1);
     });
 mongoose.set('debug', false);
@@ -102,7 +102,7 @@ const chooseDocument = () => {
 const chooseNewState = (p) => {
 
 
-    console.log("entro a choose")
+    // console.log("entro a choose")
     let newState = 'N'
     let isAction = getRandomInt(0, 100)
     if (isAction >= 90) {
@@ -111,18 +111,18 @@ const chooseNewState = (p) => {
         newState = p.options[i]
 
     }
-    console.log("newstate", newState)
+    // console.log("newstate", newState)
     p.prevState = p.state==='N'? p.prevState: p.state
     p.state = newState
     if (p.state !== 'N') {
-        console.log(states[newState])
+        // console.log(states[newState])
         p.options = [...(states[newState])]
         if (p.state === 'S' && p.prevState !== 'I') {
             p.options = ['Q', 'D']
 
         }
     }
-    console.log("termino choose")
+    // console.log("termino choose")
 }
 
 const makeAction = (p) => {
@@ -213,7 +213,7 @@ const simulateNeurone = () => {
 
 
             participants.map(participant => {
-                console.log(participant)
+                // console.log(participant)
                 chooseNewState(participant)
                 makeAction(participant)
             })
@@ -236,5 +236,5 @@ app.get('/stop', (req, res, next) => {
 
 app.listen(port, () => {
 
-    console.log(`app is listening to port ${port}`)
+    // console.log(`app is listening to port ${port}`)
 })
