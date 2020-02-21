@@ -15,10 +15,14 @@ const documents = [{ id: "d1", relevant: true }, { id: "d2", relevant: false }, 
 { id: "d10", relevant: false }, { id: "d11", relevant: false }, { id: "d12", relevant: true }]
 
 
-const queries = [...Array(40).keys()].map(e => "q" + e)
+const queries = [
+    "qué es una red neuronal", "que es la computación cuántica", "qué es machinelearning"
+    , "bosques finlandeces", "que es netflix", "cuál es el mejor libro",
+    "cuál es el país más grande de el mundo", "google"
+]
 
 const states = {
-    'S': ['Q'], 'Q': ['D', 'Q'], 'D': ['S', 'B'],
+    'S': ['W'], 'Q': ['D', 'W'], 'D': ['S', 'B'],
     'B': ['S', 'U'], 'U': ['S', 'B']
 }
 
@@ -29,6 +33,8 @@ const participants = [...Array(45).keys()].map(e => {
         prevState: "",
         doc: "",
         query: "",
+        writingQuery: "",
+        index: 0,
         options: ['N', 'S']
     }
 
@@ -60,12 +66,13 @@ import './models/bookmarks'
 import './models/queries'
 import './models/userdata'
 import './models/visitedLinks'
+import './models/keystrokes'
 
 const VisitedLink = mongoose.model('VisitedLink')
 const Bookrmark = mongoose.model('Bookmark')
 const Queries = mongoose.model('Queries')
 const UserData = mongoose.model('UserData')
-
+const Keystrokes = mongoose.model('Keystrokes')
 VisitedLink.remove({}, () => {
     //VisitedLink.create({ username: "kimbo", localTimestamp: Date.now() })
 })
@@ -79,6 +86,10 @@ UserData.remove({}, () => {
 
     UserData.insertMany(participants)
     //UserData.create({ username: "kimbo", localTimestamp: Date.now() })
+})
+Keystrokes.remove({}, () => {
+
+
 })
 
 const getRandomInt = (min, max) => {
@@ -105,20 +116,30 @@ const chooseNewState = (p) => {
     // console.log("entro a choose")
     let newState = 'N'
     let isAction = getRandomInt(0, 100)
-    if (isAction >= 90) {
+    if (p.state === 'W') {
+
+        if (p.query === p.writingQuery) {
+
+            newState = 'Q'
+        } else {
+
+            newState = 'W'
+        }
+    }
+    else if (isAction >= 90) {
         let n = p.options.length - 1
         let i = getRandomInt(0, n)
         newState = p.options[i]
 
     }
     // console.log("newstate", newState)
-    p.prevState = p.state==='N'? p.prevState: p.state
+    p.prevState = p.state === 'N' ? p.prevState : p.state
     p.state = newState
-    if (p.state !== 'N') {
+    if (p.state !== 'N' && p.state !== 'W') {
         // console.log(states[newState])
         p.options = [...(states[newState])]
         if (p.state === 'S' && p.prevState !== 'I') {
-            p.options = ['Q', 'D']
+            p.options = ['W', 'D']
 
         }
     }
@@ -133,7 +154,7 @@ const makeAction = (p) => {
         case 'S':
             let visitedlink = {
                 username: p.username,
-                url: '/serch',
+                url: '/search',
                 state: 'PageEnter',
                 localTimestamp: Date.now()
             }
@@ -149,9 +170,49 @@ const makeAction = (p) => {
                 VisitedLink.create(documentExit)
             }
             break;
+        case 'W':
+            if (p.prevState !== 'W') {
+                p.query = chooseQuery()
+                p.index = 0
+                p.writingQuery = ""
+            }
+            let index = p.index
+
+            let key = p.query.charAt(index)
+            console.log(key)
+            let keyCode = key.toUpperCase().charCodeAt(0)
+            if(getRandomInt(0, 100)<=10){
+
+                keyCode=8
+                p.writingQuery=p.writingQuery.substring(0,p.writingQuery.length-1)
+                index=index!==0?index-1:0
+                p.index=index
+            } else{    
+                index++
+                p.index = index
+                p.writingQuery = p.writingQuery + key
+            }
+            console.log(keyCode)
+            let keyStroke = {
+
+                keyCode: keyCode,
+                username: p.username,
+                url: "/search",
+                localTimestamp: Date.now()
+            }
+            Keystrokes.create(keyStroke)
+
+            break;
+
         case 'Q':
-           
-            let query = chooseQuery()
+            let keyStrokeF = {
+                keyCode: 13,
+                username: p.username,
+                url: "/search",
+                localTimestamp: Date.now()
+            }
+            Keystrokes.create(keyStrokeF)
+            let query = p.query
             let queryObj = {
                 username: p.username,
                 query: query,
@@ -159,18 +220,15 @@ const makeAction = (p) => {
                 localTimestamp: Date.now()
             }
             Queries.create(queryObj)
-            p.query = query
             break;
         case 'D':
             let document = chooseDocument()
             let documentObj = {
-
                 username: p.username,
                 localTimestamp: Date.now(),
                 url: `/page/${document.id}`,
                 state: 'PageEnter'
             }
-
             let searchObj = {
                 username: p.username,
                 localTimestamp: Date.now(),
@@ -210,13 +268,11 @@ const makeAction = (p) => {
 }
 
 const simulateNeurone = () => {
-
-
-            participants.map(participant => {
-                // console.log(participant)
-                chooseNewState(participant)
-                makeAction(participant)
-            })
+    participants.map(participant => {
+        // console.log(participant)
+        chooseNewState(participant)
+        makeAction(participant)
+    })
 }
 
 app.get('/init', (req, res, next) => {
