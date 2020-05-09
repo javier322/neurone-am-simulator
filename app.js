@@ -26,6 +26,7 @@ const states = {
     'B': ['S', 'U'], 'U': ['S', 'B']
 }
 
+//Numero de participantes a simular
 const participants = [...Array(45).keys()].map(e => {
     return {
         username: "participant" + e,
@@ -50,6 +51,7 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+//Credenciales base de datos mongodb://user:password@host:port/db_name
 const host = process.env.MONGO_DB || 'localhost'
 mongoose.connect(`mongodb://test:test@${host}:27017/test`)
     .then(() => { // if all is ok we will be here
@@ -73,6 +75,8 @@ const Bookrmark = mongoose.model('Bookmark')
 const Queries = mongoose.model('Queries')
 const UserData = mongoose.model('UserData')
 const Keystrokes = mongoose.model('Keystrokes')
+
+//Limpiar db al iniciar programa
 VisitedLink.remove({}, () => {
     //VisitedLink.create({ username: "kimbo", localTimestamp: Date.now() })
 })
@@ -152,6 +156,16 @@ const makeAction = (p) => {
         case 'N':
             break;
         case 'S':
+            if(p.prevState==='I'){
+                let initLink={
+                    username: p.username,
+                    url: "/tutorial?stage=search",
+                    state: 'PageExit',
+                    localTimestamp: Date.now()
+
+                }
+                VisitedLink.create(initLink)
+            }
             let visitedlink = {
                 username: p.username,
                 url: '/search',
@@ -179,7 +193,7 @@ const makeAction = (p) => {
             let index = p.index
 
             let key = p.query.charAt(index)
-            console.log(key)
+            // console.log(key)
             let keyCode = key.toUpperCase().charCodeAt(0)
             if(getRandomInt(0, 100)<=10){
 
@@ -192,7 +206,7 @@ const makeAction = (p) => {
                 p.index = index
                 p.writingQuery = p.writingQuery + key
             }
-            console.log(keyCode)
+           // console.log(keyCode)
             let keyStroke = {
 
                 keyCode: keyCode,
@@ -275,6 +289,7 @@ const simulateNeurone = () => {
     })
 }
 
+//Iniciar simulación
 app.get('/init', (req, res, next) => {
 
     if (sesion == null) {
@@ -283,6 +298,7 @@ app.get('/init', (req, res, next) => {
     res.status(200).json("ok")
 })
 
+//Parar simulación
 app.get('/stop', (req, res, next) => {
 
     clearInterval(sesion)
@@ -290,6 +306,7 @@ app.get('/stop', (req, res, next) => {
     res.status(200).json("ok")
 })
 
+//npm run dev
 app.listen(port, () => {
 
     // console.log(`app is listening to port ${port}`)
