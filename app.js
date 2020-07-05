@@ -8,6 +8,10 @@ dotenv.config()
 
 const app = express()
 const port = process.env.PORT || 4002
+const db_name=process.env.DB_NAME || "test"
+const db_username=process.env.DB_USERNAME || "test"
+const db_password=process.env.DB_PASSWORD || "test"
+const participant_number=process.env.PARTICIPANT_NUMBER || 20
 
 const documents = [{ id: "d1", relevant: true }, { id: "d2", relevant: false }, { id: "d3", relevant: false }
     , { id: "d4", relevant: true }, { id: "d5", relevant: false }, { id: "d6", relevant: false },
@@ -26,8 +30,8 @@ const states = {
     'B': ['S', 'U'], 'U': ['S', 'B']
 }
 
-//Numero de participantes a simular
-const participants = [...Array(45).keys()].map(e => {
+//Numero de participantes a simular. $5 Actualmente
+const participants = [...Array(Number(participant_number)).keys()].map(e => {
     return {
         username: "participant" + e,
         state: "I",
@@ -53,7 +57,7 @@ app.use(bodyParser.json());
 
 //Credenciales base de datos mongodb://user:password@host:port/db_name
 const host = process.env.MONGO_DB || 'localhost'
-mongoose.connect(`mongodb://test:test@${host}:27017/test`)
+mongoose.connect(`mongodb://${db_username}:${db_password}@${host}:27017/${db_name}`)
     .then(() => { // if all is ok we will be here
         // console.log('Start');
     })
