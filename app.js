@@ -11,8 +11,9 @@ const port = process.env.PORT || 4002;
 const db_name = process.env.DB_NAME || "test";
 const db_username = process.env.DB_USERNAME || "test";
 const db_password = process.env.DB_PASSWORD || "test";
+const db_host= process.env.DB_HOST || "localhost"
 const participant_number = process.env.PARTICIPANT_NUMBER || 500;
-
+let participants=[]
 const documents = [
   { id: "d1", relevant: true },
   { id: "d2", relevant: false },
@@ -59,9 +60,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //Credenciales base de datos mongodb://user:password@host:port/db_name
-const host = process.env.MONGO_DB || "localhost";
+// const host = process.env.MONGO_DB || "localhost";
 mongoose
-  .connect(`mongodb://${db_username}:${db_password}@${host}:27018/${db_name}`)
+  .connect(`mongodb://${db_username}:${db_password}@${db_host}:27017/${db_name}`)
   .then(() => {
     // if all is ok we will be here
     // console.log('Start');
@@ -87,6 +88,7 @@ const UserData = mongoose.model("UserData");
 const Keystrokes = mongoose.model("Keystrokes");
 const Sequences = mongoose.model("Sequence");
 
+
 //Limpiar db al iniciar programa
 VisitedLink.remove({}, () => {
   //VisitedLink.create({ username: "kimbo", localTimestamp: Date.now() })
@@ -99,7 +101,7 @@ Queries.remove({}, () => {
 });
 UserData.remove({}, async () => {
   //Numero de participantes a simular. $5 Actualmente
-  const participants = [...Array(Number(participant_number)).keys()].map(
+  const participantsAux = [...Array(Number(participant_number)).keys()].map(
     (e) => {
       return {
         username: "participant",
@@ -114,7 +116,7 @@ UserData.remove({}, async () => {
     }
   );
 
-  for (const participant of participants) {
+  for (const participant of participantsAux) {
     let counter = await Sequences.findOneAndUpdate(
       {},
       { $inc: { actual_value: 1 } }
@@ -122,6 +124,7 @@ UserData.remove({}, async () => {
 
     participant.username = participant.username + counter.actual_value;
   }
+  participants=participants.concat(participantsAux)
   UserData.insertMany(participants);
   //UserData.create({ username: "kimbo", localTimestamp: Date.now() })
 });
