@@ -12,6 +12,8 @@ const db_name = process.env.DB_NAME || "test";
 const db_username = process.env.DB_USERNAME || "test";
 const db_password = process.env.DB_PASSWORD || "test";
 const db_host= process.env.DB_HOST || "localhost"
+
+const db_port= process.env.DB_PORT || 27017
 const participant_number = process.env.PARTICIPANT_NUMBER || 500;
 let participants=[]
 const documents = [
@@ -62,7 +64,7 @@ app.use(bodyParser.json());
 //Credenciales base de datos mongodb://user:password@host:port/db_name
 // const host = process.env.MONGO_DB || "localhost";
 mongoose
-  .connect(`mongodb://${db_username}:${db_password}@${db_host}:27017/${db_name}`)
+  .connect(`mongodb://${db_username}:${db_password}@${db_host}:${db_port}/${db_name}`)
   .then(() => {
     // if all is ok we will be here
     // console.log('Start');
@@ -116,13 +118,14 @@ UserData.remove({}, async () => {
     }
   );
 
+  let counter={actual_value:0}
   for (const participant of participantsAux) {
-    let counter = await Sequences.findOneAndUpdate(
-      {},
-      { $inc: { actual_value: 1 } }
-    );
-
+    // let counter = await Sequences.findOneAndUpdate(
+    //   {},
+    //   { $inc: { actual_value: 1 } }
+    // );
     participant.username = participant.username + counter.actual_value;
+    counter.actual_value=counter.actual_value+1
   }
   participants=participants.concat(participantsAux)
   UserData.insertMany(participants);

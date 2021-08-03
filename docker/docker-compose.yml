@@ -6,14 +6,15 @@ services:
     image: mongo
     restart: always
     container_name: mongodb
+    command: "--replSet rs0 --oplogSize 128"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: admin
-      MONGO_INITDB_DATABASE:  test
+      MONGO_INITDB_DATABASE:  neurone
     volumes:
       - mongodb:/data/db
     ports:
-      - 27017:27017
+      - 27018:27017
     volumes:
       - ./createdbuser.js:/docker-entrypoint-initdb.d/createdbuser.js:ro 
 volumes:
